@@ -87,12 +87,11 @@ void AAuraPlayerController::SetupInputComponent()
 {
     // 调用父类的SetupInputComponent以进行基础设置
     // 注释掉这行可能是因为需要完全自定义输入，不使用父类的绑定
-    //Super::SetupInputComponent();
+    Super::SetupInputComponent();
 
     // 将InputComponent转换为增强输入组件
     // CastChecked：安全的类型转换，如果转换失败会触发断言
-    UEnhancedInputComponent* EnhancedInputComponent =
-        CastChecked<UEnhancedInputComponent>(InputComponent);
+    UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
 
     // 绑定移动输入事件
     // MoveAction：预定义的UInputAction资产，表示移动输入
