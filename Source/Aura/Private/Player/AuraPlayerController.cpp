@@ -1,7 +1,8 @@
 // Copyright Amor
 
 #include "Player/AuraPlayerController.h"
-#include "AuraPlayerController.h"
+
+#include "EnhancedInputSubSystems.h"
 
 /**
  * AAuraPlayerController 构造函数
@@ -36,7 +37,7 @@ void AAuraPlayerController::BeginPlay()
 
     // 获取增强输入本地玩家子系统
     // 这是处理增强输入系统的子系统
-    UEnhancedInputLocalPlayerSubsystem *Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+    UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
 
     // 检查子系统是否成功获取，失败则触发断言
     check(Subsystem);

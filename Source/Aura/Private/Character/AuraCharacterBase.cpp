@@ -9,25 +9,25 @@
  */
 AAuraCharacterBase::AAuraCharacterBase()
 {
-	// 设置此角色不需要每帧调用Tick()函数
-	// 可以关闭此功能以提高性能，如果不需要的话
-	PrimaryActorTick.bCanEverTick = false; // 禁用角色的每帧更新，节省性能
+    // 设置此角色不需要每帧调用Tick()函数
+    // 可以关闭此功能以提高性能，如果不需要的话
+    PrimaryActorTick.bCanEverTick = false; // 禁用角色的每帧更新，节省性能
 
-	// 创建武器组件
-	// CreateDefaultSubobject: 在构造函数中创建子对象的标准方法
-	// "Weapon": 组件名称，用于在编辑器中识别
-	Weapon = CreateDefaultSubobject<USkeletalMeshComponent>("Weapon");
+    // 创建武器组件
+    // CreateDefaultSubobject: 在构造函数中创建子对象的标准方法
+    // "Weapon": 组件名称，用于在编辑器中识别
+    Weapon = CreateDefaultSubobject<USkeletalMeshComponent>("Weapon");
 
-	// 将武器组件附加到角色的骨骼网格体上
-	// GetMesh(): 获取角色的骨骼网格体组件
-	// FName("WeaponHandSocket"): 骨骼插槽名称，武器将附着在这个插槽上
-	// 这个插槽需要在角色的骨骼网格体中预先定义
-	Weapon->SetupAttachment(GetMesh(), FName("WeaponHandSocket"));
+    // 将武器组件附加到角色的骨骼网格体上
+    // GetMesh(): 获取角色的骨骼网格体组件
+    // FName("WeaponHandSocket"): 骨骼插槽名称，武器将附着在这个插槽上
+    // 这个插槽需要在角色的骨骼网格体中预先定义
+    Weapon->SetupAttachment(GetMesh(), FName("WeaponHandSocket"));
 
-	// 设置武器组件的碰撞属性
-	// ECollisionEnabled::NoCollision: 禁用所有碰撞
-	// 这可以防止武器与场景中的其他物体发生不必要的碰撞交互
-	Weapon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    // 设置武器组件的碰撞属性
+    // ECollisionEnabled::NoCollision: 禁用所有碰撞
+    // 这可以防止武器与场景中的其他物体发生不必要的碰撞交互
+    Weapon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 /**
@@ -37,9 +37,9 @@ AAuraCharacterBase::AAuraCharacterBase()
  */
 void AAuraCharacterBase::BeginPlay()
 {
-	// 首先调用父类的BeginPlay方法，确保所有基础初始化完成
-	Super::BeginPlay();
+    // 首先调用父类的BeginPlay方法，确保所有基础初始化完成
+    Super::BeginPlay();
 
-	// 可以在这里添加角色的游戏开始时的初始化逻辑
-	// 例如：初始化能力、设置初始状态、加载数据等
+    // 可以在这里添加角色的游戏开始时的初始化逻辑
+    // 例如：初始化能力、设置初始状态、加载数据等
 }
