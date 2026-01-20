@@ -32,9 +32,5 @@ public:
     // 用于恢复敌人的原始外观
     virtual void UnHighlightActor() override;
 
-    // 高亮状态标志位
-    UPROPERTY(BlueprintReadOnly)
-    bool bHighlighted = false;
-
-
-};  
+    AAuraEnemy() ;
+};

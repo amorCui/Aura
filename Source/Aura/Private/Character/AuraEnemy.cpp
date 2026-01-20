@@ -4,6 +4,14 @@
 // 包含AuraEnemy类的头文件
 #include "Character/AuraEnemy.h"
 
+#include "Aura/Aura.h"
+
+
+AAuraEnemy::AAuraEnemy()
+{
+	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+}
+
 /**
  * HighlightActor 函数
  * 当敌人需要被高亮显示时调用（如玩家选中目标或鼠标悬停）
@@ -11,8 +19,10 @@
  */
 void AAuraEnemy::HighlightActor()
 {
-    // 设置高亮标志位为true，表示这个敌人当前被高亮显示
-    bHighlighted = true;
+	GetMesh()->SetRenderCustomDepth(true);
+	GetMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_RED);
+	Weapon->SetRenderCustomDepth(true);
+	Weapon->SetCustomDepthStencilValue(CUSTOM_DEPTH_RED);
 }
 
 /**
@@ -22,6 +32,10 @@ void AAuraEnemy::HighlightActor()
  */
 void AAuraEnemy::UnHighlightActor()
 {
-    // 设置高亮标志位为false，表示取消高亮
-    bHighlighted = false;
+	GetMesh()->SetRenderCustomDepth(false);
+	Weapon->SetRenderCustomDepth(false);
+
 }
+
+
+
