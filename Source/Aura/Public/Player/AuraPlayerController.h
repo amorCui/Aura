@@ -7,6 +7,8 @@
 #include "CoreMinimal.h"
 // 包含Unreal Engine的PlayerController基类
 #include "GameFramework/PlayerController.h"
+
+#include "Interaction/EnemyInterface.h"
 // 包含自动生成的代码头文件
 #include "AuraPlayerController.generated.h"
 
@@ -15,6 +17,8 @@
 class UInputMappingContext;   // 输入映射上下文类的前向声明
 class UInputAction;           // 输入动作类的前向声明
 struct FInputActionValue;     // 输入动作值结构体的前向声明
+
+
 
 /**
  * Aura玩家控制器类
@@ -31,6 +35,9 @@ class AURA_API AAuraPlayerController : public APlayerController
 public:
     // 构造函数声明
     AAuraPlayerController();
+
+    // PlayerTick 函数声明 - 添加到类定义中
+    virtual void PlayerTick(float DeltaTime) override;
 
 protected:
     // 重写BeginPlay函数，在控制器开始游戏时调用
@@ -58,8 +65,12 @@ private:
     // const FInputActionValue&: 输入动作值的常量引用，包含输入方向和强度信息
     void Move(const FInputActionValue& InputActionValue);
 
-    // 可以在此处添加更多私有成员，例如：
-    // - 其他输入动作（攻击、跳跃、交互等）
-    // - 输入相关状态变量
-    // - 输入缓冲逻辑
+
+    // 光标准踪函数 - 用于检测光标下的交互对象
+    void CursorTrace();
+    // 上一帧检测到的Actor
+    IEnemyInterface* LastActor;
+    // 当前帧检测到的Actor
+    IEnemyInterface* ThisActor;
+
 };

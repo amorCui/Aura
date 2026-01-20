@@ -39,7 +39,4 @@ void AAuraCharacterBase::BeginPlay()
 {
     // 首先调用父类的BeginPlay方法，确保所有基础初始化完成
     Super::BeginPlay();
-
-    // 可以在这里添加角色的游戏开始时的初始化逻辑
-    // 例如：初始化能力、设置初始状态、加载数据等
 }

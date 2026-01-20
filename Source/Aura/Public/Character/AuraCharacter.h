@@ -1,41 +1,28 @@
 // Copyright Amor
 
-// Ô¤±àÒëÍ·Ö¸Áî£¬·ÀÖ¹Í·ÎÄ¼ş±»¶à´Î°üº¬
+// é¢„ç¼–è¯‘å¤´æŒ‡ä»¤ï¼Œé˜²æ­¢å¤´æ–‡ä»¶è¢«å¤šæ¬¡åŒ…å«
 #pragma once
 
-// °üº¬Unreal EngineµÄºËĞÄÍ·ÎÄ¼ş
+// åŒ…å«Unreal Engineçš„æ ¸å¿ƒå¤´æ–‡ä»¶
 #include "CoreMinimal.h"
-// °üº¬Aura½ÇÉ«»ùÀàµÄÍ·ÎÄ¼ş
+// åŒ…å«Auraè§’è‰²åŸºç±»çš„å¤´æ–‡ä»¶
 #include "Character/AuraCharacterBase.h"
-// °üº¬×Ô¶¯Éú³ÉµÄ´úÂëÍ·ÎÄ¼ş
+// åŒ…å«è‡ªåŠ¨ç”Ÿæˆçš„ä»£ç å¤´æ–‡ä»¶
 #include "AuraCharacter.generated.h"
 
 /**
- * AuraÓÎÏ·ÖĞµÄÍæ¼Ò½ÇÉ«Àà
- * Õâ¸öÀà¼Ì³Ğ×ÔAAuraCharacterBase£¬ÊÇÍæ¼Ò¿ØÖÆµÄ¾ßÌå½ÇÉ«
- * ¿ÉÒÔÔÚÕâÀïÌí¼ÓÍæ¼ÒÌØÓĞµÄ¹¦ÄÜºÍÊôĞÔ
+ * Auraæ¸¸æˆä¸­çš„ç©å®¶è§’è‰²ç±»
+ * è¿™ä¸ªç±»ç»§æ‰¿è‡ªAAuraCharacterBaseï¼Œæ˜¯ç©å®¶æ§åˆ¶çš„å…·ä½“è§’è‰²
+ * å¯ä»¥åœ¨è¿™é‡Œæ·»åŠ ç©å®¶ç‰¹æœ‰çš„åŠŸèƒ½å’Œå±æ€§
  */
-UCLASS()  // UCLASSºê£¬ÏòUnreal·´ÉäÏµÍ³×¢²á¸ÃÀà
-class AURA_API AAuraCharacter : public AAuraCharacterBase  // ¼Ì³Ğ×ÔAura½ÇÉ«»ùÀà
+UCLASS()  // UCLASSå®ï¼Œå‘Unrealåå°„ç³»ç»Ÿæ³¨å†Œè¯¥ç±»
+class AURA_API AAuraCharacter : public AAuraCharacterBase  // ç»§æ‰¿è‡ªAuraè§’è‰²åŸºç±»
 {
-    // UEºê£¬Éú³É·´ÉäºÍĞòÁĞ»¯ËùĞèµÄ´úÂëÌå
+    // UEå®ï¼Œç”Ÿæˆåå°„å’Œåºåˆ—åŒ–æ‰€éœ€çš„ä»£ç ä½“
     GENERATED_BODY()
 
 public:
-    // ¹¹Ôìº¯ÊıÉùÃ÷
-    // ÔÚÕâÀï³õÊ¼»¯Íæ¼Ò½ÇÉ«ÌØÓĞµÄÊôĞÔºÍ×é¼ş
+    // æ„é€ å‡½æ•°å£°æ˜
+    // åœ¨è¿™é‡Œåˆå§‹åŒ–ç©å®¶è§’è‰²ç‰¹æœ‰çš„å±æ€§å’Œç»„ä»¶
     AAuraCharacter();
-
-    // ¿ÉÒÔÔÚ´Ë´¦Ìí¼Ó¸ü¶à¹«¹²³ÉÔ±º¯ÊıºÍÊôĞÔ£¬ÀıÈç£º
-    // - Íæ¼ÒÌØÓĞµÄÊäÈë´¦Àíº¯Êı
-    // - Íæ¼Ò×´Ì¬¹ÜÀíº¯Êı
-    // - Íæ¼ÒUI½»»¥½Ó¿Ú
-    // - ¶àÈËÓÎÏ·Ïà¹ØµÄÍøÂçº¯Êı
-
-    // ÀıÈç£º
-    // virtual void PossessedBy(AController* NewController) override;
-    // virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-    // void Interact();
-    // void UseSkill(int32 SkillID);
-
-};  // Àà¶¨Òå½áÊø
+};  

@@ -1,54 +1,48 @@
 // Copyright Amor
 
 
-// °üº¬AuraCharacterÀàµÄÍ·ÎÄ¼þ
+// åŒ…å«AuraCharacterç±»çš„å¤´æ–‡ä»¶
 #include "Character/AuraCharacter.h"
 
-// °üº¬½ÇÉ«ÒÆ¶¯×é¼þÏà¹ØµÄÍ·ÎÄ¼þ
-// CharacterMovementComponentÊÇ´¦Àí½ÇÉ«ÒÆ¶¯µÄºËÐÄ×é¼þ
+// åŒ…å«è§’è‰²ç§»åŠ¨ç»„ä»¶ç›¸å…³çš„å¤´æ–‡ä»¶
+// CharacterMovementComponentæ˜¯å¤„ç†è§’è‰²ç§»åŠ¨çš„æ ¸å¿ƒç»„ä»¶
 #include "GameFramework/CharacterMovementComponent.h"
 
 /**
- * AAuraCharacter ¹¹Ôìº¯Êý
- * ³õÊ¼»¯½ÇÉ«ÊôÐÔºÍÒÆ¶¯×é¼þÉèÖÃ
- * ¼Ì³Ð×ÔAAuraCharacterBase£¬ÕâÀïÊÇ½ÇÉ«ÌØ¶¨µÄ³õÊ¼»¯Âß¼­
+ * AAuraCharacter æž„é€ å‡½æ•°
+ * åˆå§‹åŒ–è§’è‰²å±žæ€§å’Œç§»åŠ¨ç»„ä»¶è®¾ç½®
+ * ç»§æ‰¿è‡ªAAuraCharacterBaseï¼Œè¿™é‡Œæ˜¯è§’è‰²ç‰¹å®šçš„åˆå§‹åŒ–é€»è¾‘
  */
 AAuraCharacter::AAuraCharacter()
 {
-    // ÉèÖÃ½ÇÉ«ÒÆ¶¯×é¼þµÄ·½ÏòÓëÒÆ¶¯·½ÏòÍ¬²½
-    // µ±½ÇÉ«ÒÆ¶¯Ê±£¬»á×Ô¶¯Ðý×ªÃæ¶ÔÒÆ¶¯·½Ïò
-    // Õâ¶ÔÓÚµÚÈýÈË³ÆÊÓ½ÇµÄRPGÓÎÏ··Ç³£ÓÐÓÃ£¬½ÇÉ«¿ÉÒÔ×ÔÈ»µØ×ªÏòÒÆ¶¯·½Ïò
+    // è®¾ç½®è§’è‰²ç§»åŠ¨ç»„ä»¶çš„æ–¹å‘ä¸Žç§»åŠ¨æ–¹å‘åŒæ­¥
+    // å½“è§’è‰²ç§»åŠ¨æ—¶ï¼Œä¼šè‡ªåŠ¨æ—‹è½¬é¢å¯¹ç§»åŠ¨æ–¹å‘
+    // è¿™å¯¹äºŽç¬¬ä¸‰äººç§°è§†è§’çš„RPGæ¸¸æˆéžå¸¸æœ‰ç”¨ï¼Œè§’è‰²å¯ä»¥è‡ªç„¶åœ°è½¬å‘ç§»åŠ¨æ–¹å‘
     GetCharacterMovement()->bOrientRotationToMovement = true;
 
-    // ÉèÖÃ½ÇÉ«Ðý×ªËÙÂÊ£¬µ¥Î»ÊÇ¶È/Ãë
-    // FRotator(Pitch, Yaw, Roll): ÕâÀïÉèÖÃYawÖáÐý×ªËÙÂÊÎª400¶È/Ãë
-    // Yaw¿ØÖÆ×óÓÒÐý×ª£¬Õâ¸öÖµ¾ö¶¨ÁË½ÇÉ«×ªÏòµÄÆ½»¬¶ÈºÍËÙ¶È
+    // è®¾ç½®è§’è‰²æ—‹è½¬é€ŸçŽ‡ï¼Œå•ä½æ˜¯åº¦/ç§’
+    // FRotator(Pitch, Yaw, Roll): è¿™é‡Œè®¾ç½®Yawè½´æ—‹è½¬é€ŸçŽ‡ä¸º400åº¦/ç§’
+    // YawæŽ§åˆ¶å·¦å³æ—‹è½¬ï¼Œè¿™ä¸ªå€¼å†³å®šäº†è§’è‰²è½¬å‘çš„å¹³æ»‘åº¦å’Œé€Ÿåº¦
     GetCharacterMovement()->RotationRate = FRotator(0.f, 400.f, 0.f);
 
-    // ½«½ÇÉ«ÒÆ¶¯ÏÞÖÆÔÚÒ»¸öÆ½ÃæÄÚ£¨Í¨³£ÊÇÓëµØÃæÆ½ÐÐµÄÆ½Ãæ£©
-    // Õâ¿ÉÒÔ·ÀÖ¹½ÇÉ«ÔÚÒÆ¶¯Ê±³öÏÖÒâÍâµÄ´¹Ö±Î»ÒÆ
+    // å°†è§’è‰²ç§»åŠ¨é™åˆ¶åœ¨ä¸€ä¸ªå¹³é¢å†…ï¼ˆé€šå¸¸æ˜¯ä¸Žåœ°é¢å¹³è¡Œçš„å¹³é¢ï¼‰
+    // è¿™å¯ä»¥é˜²æ­¢è§’è‰²åœ¨ç§»åŠ¨æ—¶å‡ºçŽ°æ„å¤–çš„åž‚ç›´ä½ç§»
     GetCharacterMovement()->bConstrainToPlane = true;
 
-    // ÔÚ¿ªÊ¼Ê±½«½ÇÉ«¶ÔÆëµ½Ô¼ÊøÆ½Ãæ
-    // È·±£½ÇÉ«Éú³ÉÊ±ÔÚÕýÈ·µÄÆ½Ãæ¸ß¶ÈÉÏ
+    // åœ¨å¼€å§‹æ—¶å°†è§’è‰²å¯¹é½åˆ°çº¦æŸå¹³é¢
+    // ç¡®ä¿è§’è‰²ç”Ÿæˆæ—¶åœ¨æ­£ç¡®çš„å¹³é¢é«˜åº¦ä¸Š
     GetCharacterMovement()->bSnapToPlaneAtStart = true;
 
-    // ½ûÖ¹½ÇÉ«Ê¹ÓÃ¿ØÖÆÆ÷µÄ¸©Ñö£¨Pitch£©Ðý×ª
-    // ÕâÒâÎ¶×Å½ÇÉ«²»»á¸úËæ¿ØÖÆÆ÷µÄÉÏÏÂÊÓ½Ç¶øÇ°ºóÇãÐ±
+    // ç¦æ­¢è§’è‰²ä½¿ç”¨æŽ§åˆ¶å™¨çš„ä¿¯ä»°ï¼ˆPitchï¼‰æ—‹è½¬
+    // è¿™æ„å‘³ç€è§’è‰²ä¸ä¼šè·ŸéšæŽ§åˆ¶å™¨çš„ä¸Šä¸‹è§†è§’è€Œå‰åŽå€¾æ–œ
     bUseControllerRotationPitch = false;
 
-    // ½ûÖ¹½ÇÉ«Ê¹ÓÃ¿ØÖÆÆ÷µÄ·­¹ö£¨Roll£©Ðý×ª
-    // ÕâÒâÎ¶×Å½ÇÉ«²»»á¸úËæ¿ØÖÆÆ÷µÄ²àÏòÇãÐ±¶ø×óÓÒ·­¹ö
+    // ç¦æ­¢è§’è‰²ä½¿ç”¨æŽ§åˆ¶å™¨çš„ç¿»æ»šï¼ˆRollï¼‰æ—‹è½¬
+    // è¿™æ„å‘³ç€è§’è‰²ä¸ä¼šè·ŸéšæŽ§åˆ¶å™¨çš„ä¾§å‘å€¾æ–œè€Œå·¦å³ç¿»æ»š
     bUseControllerRotationRoll = false;
 
-    // ½ûÖ¹½ÇÉ«Ê¹ÓÃ¿ØÖÆÆ÷µÄÆ«º½£¨Yaw£©Ðý×ª
-    // ÕâÒâÎ¶×Å½ÇÉ«²»»á¸úËæ¿ØÖÆÆ÷µÄ×óÓÒÊÓ½Ç¶ø×óÓÒ×ª¶¯
-    // ½ÇÉ«µÄÐý×ª½«ÓÉbOrientRotationToMovement¿ØÖÆ£¬×ªÏòÒÆ¶¯·½Ïò
+    // ç¦æ­¢è§’è‰²ä½¿ç”¨æŽ§åˆ¶å™¨çš„åèˆªï¼ˆYawï¼‰æ—‹è½¬
+    // è¿™æ„å‘³ç€è§’è‰²ä¸ä¼šè·ŸéšæŽ§åˆ¶å™¨çš„å·¦å³è§†è§’è€Œå·¦å³è½¬åŠ¨
+    // è§’è‰²çš„æ—‹è½¬å°†ç”±bOrientRotationToMovementæŽ§åˆ¶ï¼Œè½¬å‘ç§»åŠ¨æ–¹å‘
     bUseControllerRotationYaw = false;
-
-    // ¿ÉÒÔÔÚ´Ë´¦Ìí¼Ó¸ü¶à½ÇÉ«ÌØ¶¨µÄ³õÊ¼»¯Âß¼­£¬ÀýÈç£º
-    // - ÉèÖÃÒÆ¶¯ËÙ¶È
-    // - ÅäÖÃÌøÔ¾ÄÜÁ¦
-    // - ³õÊ¼»¯¼¼ÄÜÏµÍ³
-    // - ÉèÖÃÅö×²²ÎÊý
 }
