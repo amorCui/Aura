@@ -1,8 +1,16 @@
-// Copyright Amor
+// Copyright ：Amor
 
+// 包含AuraPlayerController的头文件
 #include "Player/AuraPlayerController.h"
 
+// 包含增强输入系统相关的头文件
+// EnhancedInputSubSystems.h：增强输入子系统
+// EnhancedInputComponent.h：增强输入组件，用于绑定输入事件
 #include "EnhancedInputSubSystems.h"
+#include "EnhancedInputComponent.h"
+
+// 注意：还需要包含InputAction.h，因为MoveAction是UInputAction类型
+// 假设MoveAction在头文件中已声明为TObjectPtr<UInputAction>类型
 
 /**
  * AAuraPlayerController 构造函数
@@ -37,7 +45,8 @@ void AAuraPlayerController::BeginPlay()
 
     // 获取增强输入本地玩家子系统
     // 这是处理增强输入系统的子系统
-    UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+    UEnhancedInputLocalPlayerSubsystem* Subsystem =
+        ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
 
     // 检查子系统是否成功获取，失败则触发断言
     check(Subsystem);
@@ -67,10 +76,81 @@ void AAuraPlayerController::BeginPlay()
 
     // 应用设置的输入模式
     SetInputMode(InputModeData);
+}
 
-    // 可以在此处添加更多BeginPlay逻辑，例如：
-    // - 初始化玩家状态
-    // - 绑定输入事件
-    // - 加载玩家数据
-    // - 设置相机控制
+/**
+ * SetupInputComponent 函数
+ * 用于设置输入组件并绑定输入事件
+ * 此函数在APlayerController中被调用，用于初始化输入系统
+ */
+void AAuraPlayerController::SetupInputComponent()
+{
+    // 调用父类的SetupInputComponent以进行基础设置
+    // 注释掉这行可能是因为需要完全自定义输入，不使用父类的绑定
+    //Super::SetupInputComponent();
+
+    // 将InputComponent转换为增强输入组件
+    // CastChecked：安全的类型转换，如果转换失败会触发断言
+    UEnhancedInputComponent* EnhancedInputComponent =
+        CastChecked<UEnhancedInputComponent>(InputComponent);
+
+    // 绑定移动输入事件
+    // MoveAction：预定义的UInputAction资产，表示移动输入
+    // ETriggerEvent::Triggered：当输入持续触发时调用（例如按住按键时）
+    // this：调用此控制器实例的Move函数
+    EnhancedInputComponent->BindAction(
+        MoveAction,                     // 输入动作
+        ETriggerEvent::Triggered,       // 触发事件类型
+        this,                           // 执行对象
+        &AAuraPlayerController::Move    // 回调函数
+    );
+
+    // 可以在此处添加更多输入绑定，例如：
+    // - 攻击动作
+    // - 跳跃动作
+    // - 交互动作
+    // - 技能快捷键等
+}
+
+/**
+ * Move 函数
+ * 处理角色移动的输入回调
+ * @param InputActionValue 输入动作的值，包含输入方向和强度
+ */
+void AAuraPlayerController::Move(const FInputActionValue& InputActionValue)
+{
+    // 从输入动作值中获取2D向量（通常来自键盘WASD或手柄摇杆）
+    const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
+
+    // 获取控制器的当前旋转（看向的方向）
+    const FRotator Rotation = GetControlRotation();
+
+    // 只使用Yaw（水平旋转）创建新的旋转，忽略Pitch（俯仰）和Roll（翻滚）
+    const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
+
+    // 根据YawRotation计算前向方向向量（前进/后退方向）
+    const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+    // 根据YawRotation计算右向方向向量（左右平移方向）
+    const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+    // 获取此控制器当前控制的Pawn（角色）
+    if (APawn* ControlledPawn = GetPawn<APawn>())
+    {
+        // 根据输入向量的Y分量（前向/后向）应用前向移动
+        // InputAxisVector.Y：正数向前，负数向后
+        ControlledPawn->AddMovementInput(ForwardDirection, InputAxisVector.Y);
+
+        // 根据输入向量的X分量（左/右）应用右向移动
+        // InputAxisVector.X：正数向右，负数向左
+        ControlledPawn->AddMovementInput(RightDirection, InputAxisVector.X);
+
+        // 注意：AddMovementInput会累加移动输入，直到下一帧被清除
+        // 这使得按住按键可以持续移动
+    }
+
+    // 可以在此处添加更多移动相关的逻辑，例如：
+    // - 播放移动动画
+    // - 更新移动状态
+    // - 处理地形影响
 }
