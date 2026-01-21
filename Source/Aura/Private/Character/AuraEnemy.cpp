@@ -4,8 +4,8 @@
 // 包含AuraEnemy类的头文件
 #include "Character/AuraEnemy.h"
 
-#include <AbilitySystem/AuraAbilitySystemComponent.h>
-#include <AbilitySystem/AuraAttributeSet.h>
+#include "AbilitySystem/AuraAbilitySystemComponent.h"
+#include "AbilitySystem/AuraAttributeSet.h"
 #include "Aura/Aura.h"
 
 
@@ -40,6 +40,13 @@ AAuraEnemy::AAuraEnemy()
     // "AttributeSet": 组件名称，在编辑器中标识此属性集
     AttributeSet = CreateDefaultSubobject<UAuraAttributeSet>("AttributeSet");
 }
+
+void AAuraEnemy::BeginPlay()
+{
+    Super::BeginPlay();
+    AbilitySystemComponent->InitAbilityActorInfo(this, this);
+}
+
 
 /**
  * HighlightActor 函数

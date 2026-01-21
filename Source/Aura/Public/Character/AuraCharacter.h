@@ -25,4 +25,25 @@ public:
     // 构造函数声明
     // 在这里初始化玩家角色特有的属性和组件
     AAuraCharacter();
+
+    // 当角色被控制器拥有时调用（服务器端）
+    // 重写自APawn类的虚函数，在服务器端执行
+    // @param NewController: 获得角色控制权的新控制器
+    // 使用场景：玩家加入游戏、角色重生、控制权转移
+    virtual void PossessedBy(AController* NewController) override;
+
+    // 当PlayerState在客户端复制时调用（客户端）
+    // 重写自APawn类的虚函数，在客户端执行
+    // 使用场景：客户端第一次接收到PlayerState、PlayerState属性变化
+    virtual void OnRep_PlayerState() override;
+
+private:
+    // 初始化能力系统的Actor信息
+    // 这个函数负责将能力系统组件、PlayerState和角色关联起来
+    // 功能：
+    // 1. 从PlayerState获取能力系统组件和属性集
+    // 2. 初始化AbilityActorInfo，建立Owner-Avatar关系
+    // 3. 绑定相关委托和事件
+    // 注意：这个函数在服务器和客户端都会被调用
+    void InitAbilityActorInfo();
 };  

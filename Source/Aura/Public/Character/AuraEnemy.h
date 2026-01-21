@@ -24,6 +24,8 @@ class AURA_API AAuraEnemy : public AAuraCharacterBase,  // 继承自Aura角色�
     GENERATED_BODY()
 
 public:
+
+    /** Start IEnemyInterface */
     // 重写敌人接口的高亮函数 - 当敌人被玩家选中或鼠标悬停时调用
     // 通常用于视觉反馈，如改变轮廓颜色、发光效果等
     virtual void HighlightActor() override;
@@ -31,6 +33,10 @@ public:
     // 重写敌人接口的取消高亮函数 - 当敌人不再被选中或鼠标移开时调用
     // 用于恢复敌人的原始外观
     virtual void UnHighlightActor() override;
+    /** End IEnemyInterface */
 
     AAuraEnemy() ;
+
+protected:
+    virtual void BeginPlay() override;
 };
