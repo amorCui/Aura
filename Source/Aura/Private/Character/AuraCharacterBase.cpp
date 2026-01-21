@@ -30,6 +30,26 @@ AAuraCharacterBase::AAuraCharacterBase()
     Weapon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
+
+/**
+ * AAuraPlayerState::GetAbilitySystemComponent 实现
+ *
+ * 返回玩家状态的能力系统组件，这是 GAS 框架的标准接口实现
+ *
+ * @return 指向UAbilitySystemComponent的指针，如果未设置则返回nullptr
+ *
+ * 功能说明：
+ * 1. 实现了IAbilitySystemInterface接口的纯虚函数
+ * 2. 允许其他系统通过PlayerState获取能力系统组件
+ * 3. 在多人游戏中特别重要，因为玩家状态在服务器和客户端之间复制
+ * 4. 相比将能力系统放在角色上，放在PlayerState上更适合网络游戏
+ */
+UAbilitySystemComponent* AAuraCharacterBase::GetAbilitySystemComponent() const
+{
+    // 直接返回存储在玩家状态中的能力系统组件指针
+    return AbilitySystemComponent;
+}
+
 /**
  * BeginPlay 函数
  * 当游戏开始或角色被生成时调用
