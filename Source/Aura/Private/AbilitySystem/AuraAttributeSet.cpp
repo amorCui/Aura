@@ -18,6 +18,11 @@
 UAuraAttributeSet::UAuraAttributeSet()
 {
     // 构造函数体当前为空，可根据需要在此处添加初始化代码
+
+    InitHealth(100.f);
+    InitMaxHealth(100.f);
+    InitMana(50.f);
+    InitMaxMana(50.f);
 }
 
 /**
