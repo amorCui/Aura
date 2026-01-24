@@ -84,8 +84,12 @@ AAuraPlayerState::AAuraPlayerState()
      * 注意：实际更新频率还受限于网络带宽、服务器性能和其他因素
      * 真正的更新频率可能会低于设置值，特别是在网络条件差的情况下
      */
-    NetUpdateFrequency = 100.f;
+    // NetUpdateFrequency = 100.f;
+    // 使用新api替代直接对属性进行赋值
+    SetNetUpdateFrequency(100.f);
     // 注意：可以在后续根据需要调整这个值，优化网络性能
+
+    
 }
 
 /**

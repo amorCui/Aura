@@ -81,4 +81,8 @@ void UAuraWidgetController::SetWidgetControllerParams(const FWidgetControllerPar
     
 }
 
+void UAuraWidgetController::BroadCastInitialValues()
+{
+}
+
 

@@ -153,6 +153,27 @@ void AAuraHUD::InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySyst
     OverlayWidget->SetWidgetController(WidgetController);
 
     /**
+     * 调用界面控制器的广播初始值函数
+     * 这行代码触发属性初始值的广播，确保UI在显示时具有正确的初始状态
+     *
+     * 执行流程：
+     * 1. WidgetController从属性集获取当前属性值
+     * 2. 通过委托系统将属性值广播给所有监听的UI元素
+     * 3. UI元素接收到初始值后更新显示
+     *
+     * 典型使用场景：
+     * 1. 在HUD初始化时调用，确保UI显示正确的初始值
+     * 2. 在角色重生或重置时调用，更新UI到新的初始状态
+     * 3. 在界面重新绑定时调用，确保UI与新角色的属性同步
+     *
+     * 技术细节：
+     * 1. BroadCastInitialValues()是UOverlayWidgetController类中重写的虚函数
+     * 2. 该函数内部调用委托的Broadcast()方法，触发所有绑定的回调
+     * 3. 这是一个多播委托，可以同时通知多个UI元素
+     */
+    WidgetController->BroadCastInitialValues();
+
+    /**
      * 将叠加界面控件添加到游戏视口
      * AddToViewport(): 显示控件，使其成为游戏界面的一部分
      *
