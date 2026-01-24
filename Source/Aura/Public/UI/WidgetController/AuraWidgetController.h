@@ -200,6 +200,8 @@ public:
      */
     virtual void BroadCastInitialValues();
 
+    virtual void BindCallbacksToDependencies();
+
 protected:
     /**
      * 玩家控制器引用（蓝图只读）

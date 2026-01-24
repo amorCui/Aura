@@ -50,6 +50,27 @@ UOverlayWidgetController* AAuraHUD::GetOverlayWidgetController(const FWidgetCont
          */
         OverlayWidgetController->SetWidgetControllerParams(WCParams);
 
+        /**
+         * 调用叠加界面控制器的绑定回调到依赖项函数
+         * 这行代码建立游戏属性变化与UI更新之间的连接，实现自动化的UI响应机制
+         *
+         * 功能说明：
+         * 将控制器的回调函数绑定到Gameplay Ability System(GAS)的属性变化委托上，
+         * 当游戏中的属性（如生命值、法力值）发生变化时，自动通知UI进行更新。
+         *
+         * 设计原理：
+         * 1. GAS系统在属性变化时会触发委托（Delegate）
+         * 2. 控制器将自己的成员函数绑定到这些委托上
+         * 3. 当属性变化时，GAS调用绑定的函数，函数再广播给UI
+         * 4. 实现"属性变化 → 控制器 → UI"的自动更新流程
+         *
+         * 调用时机的重要性：
+         * 必须在以下条件满足后调用：
+         * 1. 控制器已设置WidgetControllerParams（确保AbilitySystemComponent和AttributeSet有效）
+         * 2. 在BroadCastInitialValues之前或之后都可以，但通常在之前
+         * 3. 最好在UI绑定到控制器的委托之后调用，确保UI能立即响应变化
+         */
+        OverlayWidgetController->BindCallbacksToDependencies();
         // 注意：可以根据需要在这里添加控制器的额外初始化
     }
 

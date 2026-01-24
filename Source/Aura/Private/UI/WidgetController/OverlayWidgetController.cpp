@@ -39,7 +39,7 @@ void UOverlayWidgetController::BroadCastInitialValues()
      * 2. 确保AttributeSet确实是UAuraAttributeSet类型
      * 3. 如果转换失败，程序会在开发阶段立即停止，有助于快速发现问题
      */
-    UAuraAttributeSet* AuraAttributeSet = CastChecked<UAuraAttributeSet>(AttributeSet);
+    const UAuraAttributeSet* AuraAttributeSet = CastChecked<UAuraAttributeSet>(AttributeSet);
 
     /**
      * 广播生命值（Health）初始值
@@ -90,45 +90,200 @@ void UOverlayWidgetController::BroadCastInitialValues()
 }
 
 /**
- * 典型使用场景示例：
+ * 绑定回调到依赖项函数
+ * 此函数用于订阅Gameplay Ability System(GAS)中属性变化的事件
+ * 当游戏中的属性值发生变化时，GAS会触发这些事件，我们通过回调函数接收并处理
  *
- * 1. 在UI控件的构造函数或初始化函数中：
- *    // 绑定委托
- *    OverlayWidgetController->OnHealthChanged.AddDynamic(this, &UAuraUserWidget::UpdateHealthBar);
+ * 功能说明：
+ * 1. 获取属性变化的委托（Delegate）
+ * 2. 将控制器类的成员函数绑定到这些委托上
+ * 3. 当属性变化时，GAS自动调用绑定的回调函数
  *
- *    // 触发初始更新
- *    OverlayWidgetController->BroadCastInitialValues();
+ * 设计模式：观察者模式 + 回调模式
+ * 控制器作为观察者，订阅GAS的属性变化事件，当事件发生时更新UI
  *
- * 2. 在HUD初始化中：
- *    // 创建控制器并设置参数
- *    WidgetController->SetWidgetControllerParams(Params);
+ * 调用时机：
+ * 1. 在控制器初始化完成并设置好AbilitySystemComponent和AttributeSet之后
+ * 2. 通常在SetWidgetControllerParams函数之后调用
+ * 3. 确保在游戏开始前建立好所有的事件绑定
+ */
+void UOverlayWidgetController::BindCallbacksToDependencies()
+{
+    /**
+     * 安全类型转换：将基类UAttributeSet指针转换为具体的UAuraAttributeSet类型
+     * CastChecked<>: 安全的类型转换，如果转换失败会触发断言
+     *
+     * 注意：这里使用const指针，因为我们只需要读取属性，不修改属性集本身
+     * 属性值的修改应该通过GameplayEffects进行，而不是直接修改AttributeSet
+     */
+    const UAuraAttributeSet* AuraAttributeSet = CastChecked<UAuraAttributeSet>(AttributeSet);
+
+    /**
+     * 绑定生命值变化回调
+     * GetGameplayAttributeValueChangeDelegate(): GAS提供的函数，返回指定属性的变化委托
+     *
+     * 参数说明：
+     * - AuraAttributeSet->GetHealthAttribute(): 获取生命值属性的标识符（FGameplayAttribute）
+     *
+     * 绑定方法：
+     * AddUObject(): 将UObject对象的成员函数绑定到委托上
+     *
+     * 绑定参数：
+     * - this: 拥有回调函数的对象（当前控制器实例）
+     * - &UOverlayWidgetController::HealthChanged: 回调函数指针
+     *
+     * 工作原理：
+     * 当生命值属性通过GameplayEffect或其他方式改变时，GAS会触发这个委托
+     * 委托会调用所有绑定的回调函数，包括这里的HealthChanged函数
+     */
+    AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AuraAttributeSet->GetHealthAttribute())
+        .AddUObject(this, &UOverlayWidgetController::HealthChanged);
+
+    /**
+     * 绑定最大生命值变化回调
+     * 与生命值类似，监听最大生命值属性的变化
+     */
+    AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AuraAttributeSet->GetMaxHealthAttribute())
+        .AddUObject(this, &UOverlayWidgetController::MaxHealthChanged);
+
+    /**
+     * 绑定法力值变化回调
+     * 监听法力值属性的变化
+     */
+    AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AuraAttributeSet->GetManaAttribute())
+        .AddUObject(this, &UOverlayWidgetController::ManaChanged);
+
+    /**
+     * 绑定最大法力值变化回调
+     * 监听最大法力值属性的变化
+     */
+    AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AuraAttributeSet->GetMaxManaAttribute())
+        .AddUObject(this, &UOverlayWidgetController::MaxManaChanged);
+
+    /**
+     * 可以在这里添加更多属性的绑定：
+     *
+     * 示例：
+     * AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AuraAttributeSet->GetStaminaAttribute())
+     *     .AddUObject(this, &UOverlayWidgetController::StaminaChanged);
+     */
+
+    
+}
+
+/**
+ * 生命值变化回调函数
+ * 当游戏中的生命值属性发生变化时，GAS自动调用此函数
  *
- *    // 广播初始值（UI已经绑定）
- *    WidgetController->BroadCastInitialValues();
+ * @param Data 属性变化数据，包含：
+ *     - OldValue: 变化前的旧值
+ *     - NewValue: 变化后的新值
+ *     - GEModData: GameplayEffect修改的数据（如来源、原因等）
  *
- * 3. 在属性变化回调中：
- *    // 当属性变化时，只广播变化的值
- *    void UOverlayWidgetController::HealthChanged(const FOnAttributeChangeData& Data)
- *    {
- *        OnHealthChanged.Broadcast(Data.NewValue);
- *    }
+ * const修饰符说明：
+ * 1. 函数被声明为const，因为它不会修改控制器对象的状态
+ * 2. 只是将新值广播给UI，不改变控制器内部数据
+ * 3. 符合const正确性，可以在const对象上调用
+ */
+void UOverlayWidgetController::HealthChanged(const FOnAttributeChangeData& Data) const
+{
+    /**
+     * 广播新的生命值给所有监听的UI元素
+     * OnHealthChanged: 之前声明的动态多播委托
+     * Broadcast(): 触发委托，传递新的生命值
+     *
+     * 数据流向：
+     * GAS属性变化 → HealthChanged回调 → OnHealthChanged委托 → UI更新函数
+     */
+    OnHealthChanged.Broadcast(Data.NewValue);
+
+    /**
+     * 可选：添加调试或额外逻辑
+     *
+     * 示例：
+     * // 打印变化信息
+     * UE_LOG(LogTemp, Log, TEXT("Health changed: %.1f -> %.1f (Delta: %.1f)"),
+     *        Data.OldValue, Data.NewValue, Data.NewValue - Data.OldValue);
+     *
+     * // 检查生命值是否为0（角色死亡）
+     * if (Data.NewValue <= 0.0f)
+     * {
+     *     OnCharacterDied.Broadcast();
+     * }
+     */
+}
+
+/**
+ * 最大生命值变化回调函数
+ * 当最大生命值属性变化时调用
+ *
+ * @param Data 属性变化数据
+ *
+ * 功能说明：
+ * 1. 接收新的最大生命值
+ * 2. 广播给UI更新（如血条的最大长度）
+ */
+void UOverlayWidgetController::MaxHealthChanged(const FOnAttributeChangeData& Data) const
+{
+    /**
+     * 广播新的最大生命值
+     * UI可以使用这个值重新计算血条的百分比
+     * 例如：当前生命值 / 最大生命值 = 血条填充百分比
+     */
+    OnMaxHealthChanged.Broadcast(Data.NewValue);
+}
+
+/**
+ * 法力值变化回调函数
+ * 当法力值属性变化时调用
+ *
+ * @param Data 属性变化数据
+ */
+void UOverlayWidgetController::ManaChanged(const FOnAttributeChangeData& Data) const
+{
+    /**
+     * 广播新的法力值
+     * 用于更新法力条和法力值文本
+     */
+    OnManaChanged.Broadcast(Data.NewValue);
+}
+
+/**
+ * 最大法力值变化回调函数
+ * 当最大法力值属性变化时调用
+ *
+ * @param Data 属性变化数据
+ */
+void UOverlayWidgetController::MaxManaChanged(const FOnAttributeChangeData& Data) const
+{
+    /**
+     * 广播新的最大法力值
+     * 用于更新法力条的最大长度和法力值上限文本
+     */
+    OnMaxManaChanged.Broadcast(Data.NewValue);
+}
+
+/**
+ * 完整的数据流说明：
+ *
+ * 1. 游戏逻辑修改属性（通过GameplayEffect）：
+ *    GameplayEffect → AbilitySystemComponent → AttributeSet
+ *
+ * 2. GAS触发属性变化事件：
+ *    AttributeSet → GameplayAttributeValueChangeDelegate
+ *
+ * 3. 控制器接收事件并处理：
+ *    GameplayAttributeValueChangeDelegate → BindCallbacksToDependencies绑定的回调函数
+ *
+ * 4. 控制器广播给UI：
+ *    回调函数 → OnXXXChanged委托 → UI更新函数
+ *
+ * 5. UI更新显示：
+ *    UI更新函数 → 更新血条、文本、动画等
  */
 
- /**
-  * 与属性变化监听的配合：
-  *
-  * 通常，界面控制器会有两部分功能：
-  *
-  * 1. 广播初始值（此函数）：
-  *    - 在开始时调用一次
-  *    - 确保UI显示正确的初始状态
-  *
-  * 2. 监听属性变化（通常在BindCallbacksToDependencies函数中）：
-  *    - 订阅属性变化事件
-  *    - 当属性变化时，通过委托通知UI更新
-  *
-  * 这样的设计确保了：
-  * 1. UI始终显示最新的属性值
-  * 2. UI在初始化时就有正确的值
-  * 3. 属性变化时UI能及时更新
-  */
+ 
+
+
+
+

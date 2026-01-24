@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UI/WidgetController/AuraWidgetController.h"
+#include "GameplayEffect.h"
 #include "OverlayWidgetController.generated.h"
 
 /**
@@ -112,6 +113,9 @@ public:
      */
     virtual void BroadCastInitialValues() override;
 
+
+    virtual void BindCallbacksToDependencies() override;
+
     /**
      * 生命值变化委托（蓝图可分配）
      * UPROPERTY宏参数：
@@ -147,4 +151,196 @@ public:
     UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
     FOnMaxManaChangedSignature OnMaxManaChanged;
 
+
+    /**
+     * 属性变化回调函数声明（保护成员）
+     *
+     * 这些函数作为Gameplay Ability System(GAS)属性变化事件的处理函数，
+     * 当游戏中的属性值发生变化时，这些函数会被自动调用。
+     *
+     * 访问级别：protected
+     * - 这些函数仅供类内部和派生类使用，不对外部公开
+     * - 防止外部代码直接调用这些回调函数，确保事件处理的封装性
+     *
+     * 函数特性：const成员函数
+     * - 这些函数不会修改类对象的状态，只是处理事件并广播给UI
+     * - 符合const正确性，可以在const对象上安全调用
+     * - 强调这些函数是"只读"的，不产生副作用
+     *
+     * 设计模式：事件处理器模式
+     * 这些函数作为事件处理器，将GAS系统的属性变化事件转换为UI可以理解的事件
+     *
+     * 参数说明：
+     * const FOnAttributeChangeData& Data: 属性变化数据结构体，包含：
+     *   - OldValue: 变化前的属性值
+     *   - NewValue: 变化后的属性值
+     *   - GEModData: 导致变化的GameplayEffect修改数据（可选，可能为空）
+     *
+     * 调用机制：
+     * 1. GAS检测到属性变化
+     * 2. 触发对应的属性变化委托
+     * 3. 委托调用已绑定的回调函数（这些函数）
+     * 4. 回调函数处理数据并广播给UI
+     *
+     * 注意：这些函数通常在BindCallbacksToDependencies函数中绑定到GAS的委托上
+     */
+protected:
+    /**
+     * 生命值变化回调函数
+     * 当游戏中的生命值属性发生变化时调用
+     *
+     * 功能：
+     * 1. 接收新的生命值
+     * 2. 通过OnHealthChanged委托广播给所有监听的UI元素
+     *
+     * 使用场景：
+     * 1. 角色受到伤害或治疗时
+     * 2. 生命值上限变化导致当前生命值百分比变化时
+     * 3. 角色重生或恢复生命值时
+     *
+     * UI更新示例：
+     * - 更新血条填充量
+     * - 更新生命值数字显示
+     * - 播放生命值变化动画
+     */
+    void HealthChanged(const FOnAttributeChangeData& Data) const;
+
+    /**
+     * 最大生命值变化回调函数
+     * 当最大生命值属性发生变化时调用
+     *
+     * 功能：
+     * 1. 接收新的最大生命值
+     * 2. 通过OnMaxHealthChanged委托广播给UI
+     *
+     * 使用场景：
+     * 1. 角色升级时生命值上限增加
+     * 2. 装备或技能改变生命值上限时
+     * 3. Buff/Debuff临时改变生命值上限时
+     *
+     * UI更新示例：
+     * - 调整血条总长度
+     * - 更新最大生命值文本
+     * - 重新计算生命值百分比
+     */
+    void MaxHealthChanged(const FOnAttributeChangeData& Data) const;
+
+    /**
+     * 法力值变化回调函数
+     * 当法力值属性发生变化时调用
+     *
+     * 功能：
+     * 1. 接收新的法力值
+     * 2. 通过OnManaChanged委托广播给UI
+     *
+     * 使用场景：
+     * 1. 施放技能消耗法力时
+     * 2. 法力值自然恢复时
+     * 3. 使用药水或技能恢复法力时
+     *
+     * UI更新示例：
+     * - 更新法力条填充量
+     * - 更新法力值数字显示
+     * - 播放法力值变化动画
+     */
+    void ManaChanged(const FOnAttributeChangeData& Data) const;
+
+    /**
+     * 最大法力值变化回调函数
+     * 当最大法力值属性发生变化时调用
+     *
+     * 功能：
+     * 1. 接收新的最大法力值
+     * 2. 通过OnMaxManaChanged委托广播给UI
+     *
+     * 使用场景：
+     * 1. 角色升级时法力值上限增加
+     * 2. 装备或技能改变法力值上限时
+     * 3. Buff/Debuff临时改变法力值上限时
+     *
+     * UI更新示例：
+     * - 调整法力条总长度
+     * - 更新最大法力值文本
+     * - 重新计算法力值百分比
+     */
+    void MaxManaChanged(const FOnAttributeChangeData& Data) const;
+
+    /**
+     * 派生类可以添加更多属性变化回调函数：
+     *
+     * 示例：
+     * void StaminaChanged(const FOnAttributeChangeData& Data) const;
+     * void ExperienceChanged(const FOnAttributeChangeData& Data) const;
+     * void LevelChanged(const FOnAttributeChangeData& Data) const;
+     *
+     * 注意：添加新属性回调需要：
+     * 1. 在头文件中声明函数
+     * 2. 在源文件中实现函数
+     * 3. 在BindCallbacksToDependencies中绑定到GAS委托
+     * 4. 添加对应的委托声明（如果需要）
+     */
+
+     /**
+      * 这些函数应该只被以下方式调用：
+      *
+      * 1. 由GAS系统自动调用（通过委托绑定）
+      * 2. 在单元测试中直接调用（用于测试）
+      *
+      * 不应该被以下方式调用：
+      * 1. 外部代码直接调用
+      * 2. 在同一帧中多次调用（除非属性确实多次变化）
+      *
+      * 安全注意事项：
+      * 1. 这些函数应该快速返回，避免复杂的计算
+      * 2. 广播委托可能会触发复杂的UI更新，要注意性能
+      * 3. 确保在析构时解除委托绑定，避免悬空回调
+      */
+
+      /**
+       * 网络游戏中的注意事项：
+       *
+       * 1. 这些回调可能在服务器和客户端都被调用
+       * 2. 对于本地控制的角色，两端都会触发
+       * 3. 对于其他客户端角色，只有客户端通过复制值触发
+       * 4. 需要注意网络延迟和预测对UI更新的影响
+       *
+       * 典型的网络处理：
+       * 1. 服务器：权威计算，触发回调但不一定更新UI
+       * 2. 客户端：接收复制值，触发回调并更新UI
+       * 3. 客户端预测：本地先更新UI，服务器确认后再修正
+       */
+
+       /**
+        * 错误处理建议：
+        *
+        * 1. 可以在函数开始时检查关键指针的有效性
+        * 2. 可以添加调试日志，帮助追踪属性变化
+        * 3. 可以考虑使用断言确保在开发阶段发现问题
+        *
+        * 示例：
+        * void UOverlayWidgetController::HealthChanged(const FOnAttributeChangeData& Data) const
+        * {
+        *     check(OnHealthChanged.IsBound()); // 确保委托有绑定
+        *     OnHealthChanged.Broadcast(Data.NewValue);
+        * }
+        */
+
+        /**
+         * 性能优化建议：
+         *
+         * 1. 这些函数可能会被频繁调用（如持续伤害/治疗）
+         * 2. 可以考虑批量处理或延迟更新
+         * 3. 可以添加变化阈值，只有变化足够大时才更新UI
+         *
+         * 示例优化：
+         * void UOverlayWidgetController::HealthChanged(const FOnAttributeChangeData& Data) const
+         * {
+         *     // 只有生命值变化超过1%时才更新UI
+         *     if (FMath::Abs(Data.NewValue - Data.OldValue) / MaxHealth > 0.01f)
+         *     {
+         *         OnHealthChanged.Broadcast(Data.NewValue);
+         *     }
+         * }
+         */
+    
 }; 
