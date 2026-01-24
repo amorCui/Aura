@@ -7,92 +7,127 @@
 #include "AuraHUD.generated.h"
 
 
+
+
+class UOverlayWidgetController;
 class UAuraUserWidget;
+class UAbilitySystemComponent;
+class UAttributeSet;
+
+// 界面控制器参数结构体的前向声明，用于传递初始化参数
+struct  FWidgetControllerParams;
 
 
 /**
  * Aura游戏平视显示器（HUD）类
+ * 继承自Unreal Engine的AHUD类，负责管理游戏的用户界面
  *
- * 功能概述：
- * 1. 管理游戏用户界面（UI）的显示和隐藏
- * 2. 控制叠加界面（Overlay Widget）的创建和生命周期
- * 3. 作为游戏UI系统的核心控制器
+ * 功能扩展说明：
+ * 相较于之前的基础版本，这个版本增加了：
+ * 1. 界面控制器（WidgetController）的支持，实现了MVC（Model-View-Controller）模式
+ * 2. 完整的初始化流程，分离了数据逻辑和视图显示
+ * 3. 支持从游戏系统（PlayerState、AbilitySystem等）获取数据
  *
  * 设计模式：
- * 使用主从模式，HUD作为主控制器管理所有UI控件
+ * 使用MVC模式分离关注点：
+ * - Model: PlayerState、AttributeSet、AbilitySystemComponent（数据模型）
+ * - View: UAuraUserWidget（视图，负责显示）
+ * - Controller: UOverlayWidgetController（控制器，负责逻辑和绑定）
  */
-
- /**
-  * UCLASS宏，向Unreal反射系统注册该类
-  *
-  * 类继承层次：
-  * AAuraHUD → AHUD → AActor
-  *
-  * AHUD是Unreal Engine中用于管理游戏界面的基类，提供：
-  * 1. 画布绘制功能
-  * 2. UI控件管理
-  * 3. 屏幕空间坐标转换
-  */
 UCLASS()
 class AURA_API AAuraHUD : public AHUD  // 继承自Unreal Engine的HUD基类
 {
     // UE宏，生成反射和序列化所需的代码体
-    // 必须放在类定义的顶部，紧接着类名之后
     GENERATED_BODY()
 
 public:
     /**
      * 叠加界面控件指针
-     * UPROPERTY()宏使其受到Unreal垃圾回收系统的管理
-     *
-     * 属性特性说明：
-     * 没有指定参数，使用默认设置：
-     * - 不会被蓝图读写
-     * - 可以被C++代码访问和修改
-     * - 受垃圾回收保护
+     * 这是实际的UI控件实例，负责在屏幕上显示游戏界面
      *
      * 设计说明：
-     * 1. TObjectPtr是UE5推荐的智能指针类型，用于安全地引用UObject对象
-     * 2. UAuraUserWidget是自定义的用户控件类，包含游戏的具体UI逻辑
-     * 3. 这个指针存储实际创建的控件实例，用于后续操作（如更新、隐藏等）
-     *
-     * 注意：这是一个运行时变量，在蓝图中不可见或编辑
+     * 1. 在InitOverlay函数中创建和初始化
+     * 2. 包含玩家状态信息（血条、法力条、技能栏等）
+     * 3. 通过WidgetController与游戏数据绑定
      */
     UPROPERTY()
     TObjectPtr<UAuraUserWidget> OverlayWidget;
 
-protected:
     /**
-     * 重写父类的BeginPlay函数，在游戏开始时调用
+     * 获取或创建叠加界面控制器
+     * 使用单例模式，确保只有一个控制器实例
+     *
+     * @param WCParams 界面控制器参数，包含初始化所需的所有数据
+     * @return 返回叠加界面控制器指针，如果创建失败则返回nullptr
      *
      * 功能说明：
-     * 1. 初始化HUD和UI系统
-     * 2. 创建并显示叠加界面
-     * 3. 绑定游戏事件和UI更新
+     * 1. 如果控制器尚未创建，则根据WidgetControllerClass创建新实例
+     * 2. 如果控制器已存在，则使用现有实例
+     * 3. 使用提供的参数设置控制器的数据源
      *
-     * 调用时机：
-     * 在Actor完全初始化并准备好开始游戏后执行，晚于构造函数但早于Tick
+     * 设计模式：懒汉式单例模式（Lazy Singleton）
      */
-    virtual void BeginPlay() override;
+    UOverlayWidgetController* GetOverlayWidgetController(const FWidgetControllerParams& WCParams);
+
+    /**
+     * 初始化叠加界面系统
+     * 这是HUD初始化的核心函数，通常在游戏开始时调用
+     *
+     * @param PC 玩家控制器，提供输入和玩家控制信息
+     * @param PS 玩家状态，包含玩家属性、等级等信息
+     * @param ASC 能力系统组件，管理玩家的能力和效果
+     * @param AS 属性集，包含玩家的具体属性值
+     *
+     * 初始化流程：
+     * 1. 创建叠加界面控件（如果OverlayWidgetClass已设置）
+     * 2. 创建叠加界面控制器（如果尚未创建）
+     * 3. 将控件添加到游戏视口
+     * 4. 建立数据绑定，使UI能够响应游戏状态变化
+     *
+     * 注意：这个函数通常在玩家角色完全初始化后调用
+     */
+    void InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS);
 
 private:
     /**
      * 叠加界面控件类引用（可编辑）
-     * UPROPERTY宏使其在编辑器中可编辑，并支持蓝图系统
+     * 用于指定要创建的叠加界面控件类型
      *
-     * 属性宏参数说明：
-     * - EditAnywhere: 可以在编辑器中的任何地方编辑（默认值、实例、蓝图）
-     * - Category = "UI": 在编辑器属性面板中归入"UI"分类，便于组织
-     *
-     * 类型说明：
-     * TSubclassOf<UAuraUserWidget>: 类型安全的方式引用UAuraUserWidget或其子类
-     * 这允许在蓝图中指定要实例化的具体控件类（如WBP_PlayerOverlay）
-     *
-     * 设计模式：
-     * 使用"资产引用"模式，将具体实现与代码解耦，便于设计师调整UI
+     * 设计说明：
+     * 1. 在编辑器中设置具体的控件蓝图类（如WBP_PlayerOverlay）
+     * 2. 支持通过派生类创建不同的界面变体
+     * 3. 与具体实现解耦，便于设计师调整UI
      */
     UPROPERTY(EditAnywhere, Category = "UI")
     TSubclassOf<UAuraUserWidget> OverlayWidgetClass;
 
-}; 
+    /**
+     * 叠加界面控制器指针
+     * 负责管理叠加界面的逻辑和数据绑定
+     *
+     * 功能说明：
+     * 1. 监听游戏状态变化（属性变化、能力激活等）
+     * 2. 更新UI控件显示
+     * 3. 处理用户输入事件
+     * 4. 作为游戏逻辑和UI显示之间的桥梁
+     *
+     * 注意：这是私有变量，通过GetOverlayWidgetController函数访问
+     */
+    UPROPERTY()
+    TObjectPtr<UOverlayWidgetController> OverlayWidgetController;
 
+    /**
+     * 叠加界面控制器类引用（可编辑）
+     * 用于指定要创建的叠加界面控制器类型
+     *
+     * 设计说明：
+     * 1. 在编辑器中设置具体的控制器类
+     * 2. 支持通过派生类创建不同的控制器逻辑
+     * 3. 可以创建不同类型的控制器（如玩家控制器、敌人控制器）
+     */
+    UPROPERTY(EditAnywhere, Category = "UI")
+    TSubclassOf<UOverlayWidgetController> OverlayWidgetControllerClass;
+
+
+
+}; 

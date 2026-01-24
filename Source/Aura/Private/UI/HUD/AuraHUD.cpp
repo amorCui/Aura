@@ -4,70 +4,198 @@
 #include "UI/HUD/AuraHUD.h"
 
 #include "UI/Widget/AuraUserWidget.h"
+#include "UI/WidgetController/OverlayWidgetController.h"
 
-// AAuraHUD类的BeginPlay函数实现
-// 此函数在HUD（平视显示器）开始游戏时调用，用于初始化用户界面
 
-void AAuraHUD::BeginPlay()
+
+
+/**
+ * 获取叠加界面控制器函数
+ * 使用单例模式（懒汉式）创建或返回现有的叠加界面控制器
+ *
+ * @param WCParams 界面控制器参数结构体，包含初始化所需的所有组件引用
+ * @return 返回叠加界面控制器指针，如果创建失败则返回nullptr
+ *
+ * 设计模式：懒汉式单例模式（Lazy Singleton）
+ * 只在第一次请求时创建实例，后续请求返回同一实例
+ */
+UOverlayWidgetController* AAuraHUD::GetOverlayWidgetController(const FWidgetControllerParams& WCParams)
 {
-    /**
-     * 调用父类的BeginPlay函数，确保基础初始化完成
-     * 这是Unreal Engine的标准做法，确保继承链中的所有初始化逻辑正确执行
-     * 父类可能会初始化HUD的基础状态、设置默认值等
-     */
-    Super::BeginPlay();
-
-    /**
-     * 检查叠加界面（Overlay Widget）类是否已设置（不为空）
-     * OverlayWidgetClass是一个TSubclassOf<UAuraUserWidget>类型的变量，
-     * 通常在编辑器中指定或在代码中动态设置
-     *
-     * 安全机制：避免尝试创建未定义的控件类
-     */
-    if (OverlayWidgetClass)
+    // 检查控制器是否已经创建，如果为空则创建新实例
+    if (OverlayWidgetController == nullptr)
     {
         /**
-         * 创建叠加界面控件实例
-         * CreateWidget<>: Unreal Engine的控件创建方法，用于动态生成用户界面控件
+         * 创建新的叠加界面控制器实例
+         * NewObject<>: Unreal Engine的动态对象创建方法
          *
-         * 模板参数：
-         * - UAuraUserWidget: 要创建的控件类型（自定义用户控件）
+         * 参数说明：
+         * - this: 外部对象（Outer），控制器的所有者（通常是这个HUD对象）
+         * - OverlayWidgetControllerClass: 要创建的控制器类（在蓝图中指定的类）
          *
-         * 函数参数：
-         * - GetWorld(): 获取当前游戏世界上下文，控件需要关联到特定的游戏世界
-         * - OverlayWidgetClass: 要实例化的控件类（蓝图类或C++类）
-         *
-         * 返回值：
-         * - 返回新创建的控件实例指针，类型为UAuraUserWidget*
+         * 注意：NewObject不会自动调用构造函数中的初始化逻辑，需要手动设置参数
          */
-        OverlayWidget = CreateWidget<UAuraUserWidget>(GetWorld(), OverlayWidgetClass);
+        OverlayWidgetController = NewObject<UOverlayWidgetController>(this, OverlayWidgetControllerClass);
 
         /**
-         * 检查控件是否成功创建
-         * 创建可能失败的情况：
-         * 1. OverlayWidgetClass引用无效
-         * 2. 内存不足
-         * 3. 游戏世界无效
+         * 设置控制器的初始化参数
+         * SetWidgetControllerParams(): 将游戏系统组件传递给控制器
+         *
+         * WCParams通常包含：
+         * - PlayerController: 玩家控制器
+         * - PlayerState: 玩家状态
+         * - AbilitySystemComponent: 能力系统组件
+         * - AttributeSet: 属性集
+         *
+         * 这些参数使控制器能够访问和监听游戏数据的变化
          */
-        if (OverlayWidget)
-        {
-            /**
-             * 将控件添加到游戏视口（Viewport）
-             * AddToViewport(): 将控件显示在屏幕上，成为游戏界面的一部分
-             *
-             * 功能说明：
-             * 1. 使控件在屏幕上可见并可交互
-             * 2. 控件的渲染层级由ZOrder参数控制（默认添加到最后）
-             * 3. 控件会随着游戏运行每帧更新
-             *
-             * 可选参数：
-             * - ZOrder: 渲染层级，数值越大显示在越上层
-             *
-             * 注意：添加到视口的控件会在切换关卡或手动移除时被销毁
-             */
-            OverlayWidget->AddToViewport();
-        }
-      
+        OverlayWidgetController->SetWidgetControllerParams(WCParams);
+
+        // 注意：可以根据需要在这里添加控制器的额外初始化
     }
 
+    // 返回控制器实例（无论是新创建的还是已有的）
+    return OverlayWidgetController;
 }
+
+/**
+ * 初始化叠加界面系统
+ * 这是HUD初始化的核心函数，通常在游戏开始时调用
+ *
+ * @param PC 玩家控制器，提供输入和玩家控制信息
+ * @param PS 玩家状态，包含玩家属性、等级等信息
+ * @param ASC 能力系统组件，管理玩家的能力和效果
+ * @param AS 属性集，包含玩家的具体属性值
+ *
+ * 函数执行流程：
+ * 1. 安全检查：确保所需的类引用已设置
+ * 2. 创建叠加界面控件
+ * 3. 创建或获取叠加界面控制器
+ * 4. 建立控制器与控件的关联
+ * 5. 将控件添加到游戏视口
+ */
+void AAuraHUD::InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS)
+{
+    /**
+     * 安全检查：确保叠加界面控件类已设置
+     * checkf: 条件检查宏，如果条件为false则触发断言并显示错误信息
+     *
+     * 参数说明：
+     * - 条件：OverlayWidgetClass != nullptr
+     * - 错误信息：提示用户在蓝图中设置OverlayWidgetClass
+     *
+     * 这个检查防止了运行时崩溃，提供了清晰的错误指导
+     */
+    checkf(OverlayWidgetClass, TEXT("Overlay Widget Class uninitialized, please fill out BP_AuraHUD"));
+
+    /**
+     * 安全检查：确保叠加界面控制器类已设置
+     * 同样使用checkf宏，提供清晰的错误信息
+     */
+    checkf(OverlayWidgetControllerClass, TEXT("Overlay Widget Controller Class Unitialized, please fill out BP_AuraHUD"));
+
+    /**
+     * 创建叠加界面控件实例
+     * CreateWidget<>: 创建用户控件实例的标准方法
+     *
+     * 参数说明：
+     * - GetWorld(): 获取当前游戏世界上下文
+     * - OverlayWidgetClass: 要实例化的控件类（在蓝图中指定）
+     *
+     * 注意：这里先创建UUserWidget基类，然后转换为具体类型
+     * 这样做是为了处理模板实例化的编译问题
+     */
+    UUserWidget* Widget = CreateWidget<UUserWidget>(GetWorld(), OverlayWidgetClass);
+
+    /**
+     * 将创建的控件转换为具体的UAuraUserWidget类型
+     * Cast<>: 安全的类型转换，如果转换失败则返回nullptr
+     *
+     * 这个转换是安全的，因为OverlayWidgetClass应该是UAuraUserWidget或其子类
+     */
+    OverlayWidget = Cast<UAuraUserWidget>(Widget);
+
+    /**
+     * 创建界面控制器参数结构体
+     * FWidgetControllerParams: 包含初始化控制器所需的所有组件引用
+     *
+     * 参数说明：
+     * - PC: 玩家控制器（处理输入、摄像机等）
+     * - PS: 玩家状态（存储玩家等级、经验、属性等）
+     * - ASC: 能力系统组件（管理能力和效果）
+     * - AS: 属性集（存储具体的属性值）
+     *
+     * 这个结构体将所有相关的游戏系统组件打包，便于传递
+     */
+    const FWidgetControllerParams WidgetControllerParams(PC, PS, ASC, AS);
+
+    /**
+     * 获取或创建叠加界面控制器
+     * GetOverlayWidgetController(): 单例模式的控制器获取函数
+     *
+     * 函数内部会：
+     * 1. 检查控制器是否已存在
+     * 2. 如果不存在，创建新实例并设置参数
+     * 3. 返回控制器指针
+     */
+    UOverlayWidgetController* WidgetController = GetOverlayWidgetController(WidgetControllerParams);
+
+    /**
+     * 将控制器设置给叠加界面控件
+     * SetWidgetController(): 建立控件与控制器的关联
+     *
+     * 功能说明：
+     * 1. 控制器监听游戏数据变化
+     * 2. 控件通过控制器获取和显示数据
+     * 3. 实现了MVC模式中的控制器-视图连接
+     *
+     * 注意：控件内部可能会绑定到控制器的数据源和事件
+     */
+    OverlayWidget->SetWidgetController(WidgetController);
+
+    /**
+     * 将叠加界面控件添加到游戏视口
+     * AddToViewport(): 显示控件，使其成为游戏界面的一部分
+     *
+     * 注意：这里没有指定ZOrder（渲染层级），使用默认值
+     * 如果需要控件在其他UI之上或之下，可以指定ZOrder值
+     */
+    OverlayWidget->AddToViewport();
+
+}
+
+/**
+ * 完整初始化流程总结：
+ *
+ * 1. 安全检查（checkf）
+ *    - 确保所有必需的类引用已设置
+ *    - 提供清晰的错误信息指导
+ *
+ * 2. 创建界面控件（CreateWidget）
+ *    - 根据蓝图设置的类创建控件实例
+ *    - 类型转换为具体的UAuraUserWidget
+ *
+ * 3. 准备控制器参数（FWidgetControllerParams）
+ *    - 收集所有相关的游戏系统组件
+ *    - 封装成结构体便于传递
+ *
+ * 4. 获取或创建控制器（GetOverlayWidgetController）
+ *    - 使用单例模式确保只有一个控制器实例
+ *    - 设置控制器参数，使其能够访问游戏数据
+ *
+ * 5. 建立控件与控制器关联（SetWidgetController）
+ *    - 实现MVC架构，分离数据和显示
+ *    - 控件通过控制器响应游戏状态变化
+ *
+ * 6. 显示界面（AddToViewport）
+ *    - 将控件添加到游戏视口
+ *    - 用户现在可以看到并交互
+ *
+ * 7. 后续操作（可选）
+ *    - 初始化控件状态
+ *    - 绑定额外的事件
+ *    - 播放动画或效果
+ */
+
+ 
+
+

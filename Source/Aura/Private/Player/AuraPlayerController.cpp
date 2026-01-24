@@ -68,17 +68,17 @@ void AAuraPlayerController::BeginPlay()
     UEnhancedInputLocalPlayerSubsystem* Subsystem =
         ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
 
-    // 再次检查子系统是否成功获取，失败则触发断言
-    // 确保增强输入系统已正确初始化和可用
-    check(Subsystem);
+    if (Subsystem)
+    {
+        /**
+         * 将输入映射上下文添加到子系统中，优先级为0
+         * 优先级数字越小，优先级越高（0是最高的）
+         * 这意味着AuraContext中的输入映射将覆盖优先级较低的上下文
+         * 多个上下文可以叠加，高优先级的上下文会覆盖低优先级的相同输入绑定
+         */
+        Subsystem->AddMappingContext(AuraContext, 0);
+    }
 
-    /**
-     * 将输入映射上下文添加到子系统中，优先级为0
-     * 优先级数字越小，优先级越高（0是最高的）
-     * 这意味着AuraContext中的输入映射将覆盖优先级较低的上下文
-     * 多个上下文可以叠加，高优先级的上下文会覆盖低优先级的相同输入绑定
-     */
-    Subsystem->AddMappingContext(AuraContext, 0);
 
     /**
      * 设置鼠标光标在游戏中可见

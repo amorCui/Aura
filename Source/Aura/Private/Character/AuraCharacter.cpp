@@ -2,8 +2,15 @@
 
 #include "Character/AuraCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Player/AuraPlayerState.h"
+
 #include "AbilitySystemComponent.h"
+#include "Player/AuraPlayerState.h"
+#include "Player/AuraPlayerController.h"
+#include "UI/HUD/AuraHUD.h"
+
+
+
+
 
 /**
  * AAuraCharacter 构造函数
@@ -134,23 +141,14 @@ void AAuraCharacter::OnRep_PlayerState()
      */
     InitAbilityActorInfo();
 }
-
 /**
  * InitAbilityActorInfo - 初始化能力系统的Actor信息
- * 这个函数负责将能力系统组件、PlayerState和角色关联起来
+ * 这是函数的后半部分，负责初始化HUD和UI系统
  *
- * 功能：
- * 1. 从PlayerState获取能力系统组件
- * 2. 初始化AbilityActorInfo，建立Owner-Avatar关系
- * 3. 从PlayerState获取属性集
- *
- * 这个函数在服务器和客户端都会被调用，确保两端的能力系统都正确初始化
- *
- * GAS架构说明：
- * - OwnerActor: 拥有能力系统组件的Actor（通常是PlayerState）
- * - AvatarActor: 执行能力的具体Actor（角色本身）
- * - AbilitySystemComponent: 管理能力的组件
- * - AttributeSet: 存储属性的组件
+ * 在完成GAS系统初始化后，这部分代码负责：
+ * 1. 获取玩家的控制器和HUD
+ * 2. 初始化游戏界面（Overlay）
+ * 3. 建立游戏系统与UI之间的连接
  */
 void AAuraCharacter::InitAbilityActorInfo()
 {
@@ -206,5 +204,84 @@ void AAuraCharacter::InitAbilityActorInfo()
      */
     AttributeSet = AuraPlayerState->GetAttributeSet();
 
+    /**
+     * UI初始化部分 - 连接游戏系统与用户界面
+     *
+     * 步骤：
+     * 1. 获取玩家的控制器并转换为AAuraPlayerController类型
+     * 2. 通过控制器获取HUD并转换为AAuraHUD类型
+     * 3. 调用HUD的InitOverlay函数初始化游戏界面
+     *
+     * 注意：这个逻辑既在服务器执行也在客户端执行，
+     * 但UI初始化主要在客户端有意义，服务器可能跳过或只做部分初始化
+     */
 
+     /**
+      * 获取并转换玩家的控制器
+      * GetController(): 获取控制这个角色的控制器
+      * Cast<AAuraPlayerController>(): 安全的类型转换，如果控制器不是AAuraPlayerController类型则返回nullptr
+      *
+      * 为什么需要转换：
+      * 1. 确保控制器是玩家控制器（而不是AI控制器）
+      * 2. 需要访问AAuraPlayerController特有的功能（如输入处理、UI控制）
+      */
+    if (AAuraPlayerController* AuraPlayerController = Cast<AAuraPlayerController>(GetController()))
+    {
+        /**
+         * 通过玩家控制器获取HUD并转换为AAuraHUD类型
+         * GetHUD(): 返回与控制器关联的HUD（平视显示器）
+         * Cast<AAuraHUD>(): 安全的类型转换，确保HUD是AAuraHUD类型
+         *
+         * HUD的作用：
+         * 1. 管理游戏用户界面（如血条、法力条、技能栏）
+         * 2. 处理UI输入事件
+         * 3. 显示游戏状态信息
+         */
+        if (AAuraHUD* AuraHUD = Cast<AAuraHUD>(AuraPlayerController->GetHUD()))
+        {
+            /**
+             * 初始化HUD的叠加界面（Overlay）
+             * InitOverlay(): 设置HUD并创建游戏主界面
+             *
+             * 参数说明：
+             * - AuraPlayerController: 玩家控制器（处理输入、摄像机等）
+             * - AuraPlayerState: 玩家状态（存储等级、经验、属性等）
+             * - AbilitySystemComponent: 能力系统组件（管理能力和效果）
+             * - AttributeSet: 属性集（存储具体的属性值）
+             *
+             * 功能说明：
+             * 1. 创建叠加界面控件（如血条、法力条、技能图标）
+             * 2. 建立数据绑定，使UI能够响应游戏状态变化
+             * 3. 将控件添加到游戏视口
+             *
+             * 注意：这个函数通常在玩家角色完全初始化后调用一次
+             */
+            AuraHUD->InitOverlay(AuraPlayerController, AuraPlayerState, AbilitySystemComponent, AttributeSet);
+
+            // 注意：InitOverlay内部会进行安全检查，确保所需的类引用已设置
+        }
+    }
+    
+
+    /**
+     * 初始化流程总结：
+     *
+     * 1. GAS系统初始化：
+     *    - 获取PlayerState中的ASC和AttributeSet
+     *    - 建立Owner-Avatar关系
+     *    - 注册属性和能力
+     *
+     * 2. UI系统初始化：
+     *    - 获取玩家控制器和HUD
+     *    - 初始化游戏界面
+     *    - 建立游戏数据与UI的绑定
+     *
+     * 3. 网络同步：
+     *    - 在服务器端（PossessedBy）和客户端（OnRep_PlayerState）都执行
+     *    - 确保两端的GAS和UI状态一致
+     *
+     * 4. 错误处理：
+     *    - 每一步都有安全检查
+     *    - 转换失败时有回退逻辑
+     */
 }
